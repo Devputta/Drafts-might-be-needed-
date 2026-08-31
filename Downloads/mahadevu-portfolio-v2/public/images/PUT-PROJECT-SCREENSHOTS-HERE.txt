@@ -1,0 +1,1 @@
+Put real project screenshots here and update image paths in src/main.jsx.

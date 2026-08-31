@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
+<rect width="1200" height="700" fill="#111820"/>
+<rect x="55" y="55" width="1090" height="590" rx="30" fill="none" stroke="#d8d4cc" stroke-opacity=".16"/>
+<text x="90" y="320" fill="#f3f0e9" font-family="Georgia,serif" font-size="55" font-weight="600">DATA ENGINEERING</text>
+<text x="92" y="370" fill="#9ea6ad" font-family="Arial,sans-serif" font-size="25">AWS S3  •  SNOWFLAKE  •  DBT</text>
+<text x="92" y="560" fill="#737c84" font-family="Arial,sans-serif" font-size="17">Replace with your actual project screenshot</text>
+</svg>
