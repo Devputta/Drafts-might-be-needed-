@@ -1,0 +1,16 @@
+# Day 1 — Foundation
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+pydantic>=2.7,<3.0
+pydantic-settings>=2.3,<3.0
+python-dotenv>=1.0,<2.0
+
+# Day 2 — Local security scanner + test tooling
+bandit>=1.7,<2.0
+pytest>=8.0,<9.0
+httpx>=0.27,<1.0
+# ^ httpx is required by FastAPI's TestClient, not by app code yet.
+#   App code will start using it directly in Day 3 for the LLM call.
+
+# Day 3 will add: (none — httpx already present)
+# Day 4 will add: pytest-asyncio if async tests are needed

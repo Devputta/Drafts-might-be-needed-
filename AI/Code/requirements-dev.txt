@@ -1,0 +1,4 @@
+# Optional, dev-only tooling — not required to run or test the app.
+# See SECURITY.md for how and why to use this.
+
+pip-audit>=2.7,<3.0
