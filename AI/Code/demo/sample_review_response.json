@@ -1,0 +1,33 @@
+{
+  "scan": {
+    "tool": "bandit",
+    "findings": [
+      {
+        "rule_id": "B602",
+        "rule_name": "subprocess_popen_with_shell_equals_true",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "line": 4,
+        "message": "subprocess call with shell=True identified, security issue.",
+        "more_info": "https://bandit.readthedocs.io/en/1.7.x/plugins/b602_subprocess_popen_with_shell_equals_true.html"
+      }
+    ],
+    "issue_count": 1,
+    "loc": 4
+  },
+  "ai_review": {
+    "summary": "The function passes a caller-controlled command straight into a shell, which is a classic command-injection vector.",
+    "risk_level": "HIGH",
+    "issues": [
+      {
+        "severity": "HIGH",
+        "category": "Injection",
+        "line": 4,
+        "explanation": "run_backup(cmd) forwards its argument directly to subprocess.call() with shell=True. Anyone who controls `cmd` (directly or via a config file, environment variable, or upstream input) can inject additional shell commands using characters like `;`, `&&`, or `|`.",
+        "suggested_fix": "Avoid shell=True. Pass the command as a list and let subprocess handle argument splitting: subprocess.call(cmd_list, shell=False) — or, if a full shell pipeline is genuinely required, validate/allowlist the input before it ever reaches this function."
+      }
+    ]
+  },
+  "ai_error": null,
+  "redactions": []
+}

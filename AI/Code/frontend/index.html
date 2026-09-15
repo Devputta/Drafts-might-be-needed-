@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Code Review &amp; Security Sentinel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* Tailwind's CDN build can't see arbitrary values baked into template
+     strings, so the handful of severity colors used only inside JS-built
+     markup are defined here instead of as Tailwind classes. */
+  ::selection { background: #334155; }
+  textarea:focus, button:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+</style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+
+  <header class="border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-baseline justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-semibold tracking-tight">AI Code Review &amp; Security Sentinel</h1>
+        <p class="text-sm text-slate-400 mt-0.5">Local Bandit scan, paired with a free-tier AI review.</p>
+      </div>
+      <div class="text-xs text-slate-500 shrink-0">
+        <label for="apiBase" class="mr-1.5">API</label>
+        <input id="apiBase" type="text" value="http://127.0.0.1:8000"
+          class="bg-slate-900 border border-slate-800 rounded px-2 py-1 w-48 text-slate-300 focus:border-sky-600" />
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-2 gap-8">
+
+    <!-- Left: code input -->
+    <section aria-labelledby="input-heading">
+      <h2 id="input-heading" class="text-sm font-medium text-slate-400 mb-2">Python source</h2>
+      <textarea id="code" rows="18" spellcheck="false"
+        class="w-full bg-slate-900 border border-slate-800 rounded-lg p-4 font-mono text-sm leading-relaxed
+               text-slate-100 placeholder-slate-600 resize-y"
+        placeholder="Paste a Python function, script, or module here.">import subprocess
+
+def run_backup(cmd):
+    subprocess.call(cmd, shell=True)</textarea>
+
+      <div class="mt-3 flex items-center gap-3">
+        <button id="reviewBtn"
+          class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700
+                 disabled:cursor-not-allowed transition-colors rounded-lg px-4 py-2.5 text-sm font-medium">
+          <svg id="spinner" class="hidden animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <span id="reviewBtnLabel">Run review</span>
+        </button>
+        <button id="clearBtn"
+          class="text-sm text-slate-400 hover:text-slate-200 px-3 py-2.5">
+          Clear
+        </button>
+        <span class="text-xs text-slate-600 ml-auto">Python only, up to 50,000 characters</span>
+      </div>
+
+      <p id="errorBanner" class="hidden mt-4 text-sm bg-rose-950/60 border border-rose-800 text-rose-200 rounded-lg px-4 py-3"></p>
+    </section>
+
+    <!-- Right: results -->
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading" class="text-sm font-medium text-slate-400 mb-2">Results</h2>
+
+      <div id="emptyState" class="text-sm text-slate-500 border border-dashed border-slate-800 rounded-lg p-8 text-center">
+        Paste code on the left and click <span class="text-slate-300">Run review</span> to see
+        Bandit findings and the AI review here.
+      </div>
+
+      <div id="results" class="hidden space-y-6"></div>
+    </section>
+
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-6 pb-10 text-xs text-slate-600">
+    Runs entirely against your local FastAPI server. No data leaves your machine except the
+    snippet sent to your configured LLM provider for the AI review.
+  </footer>
+
+<script>
+const SEVERITY_ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNDEFINED"];
+
+const SEVERITY_STYLES = {
+  CRITICAL: { badge: "bg-rose-500/15 text-rose-300 border-rose-500/30", bar: "border-rose-500" },
+  HIGH:     { badge: "bg-orange-500/15 text-orange-300 border-orange-500/30", bar: "border-orange-500" },
+  MEDIUM:   { badge: "bg-amber-500/15 text-amber-300 border-amber-500/30", bar: "border-amber-500" },
+  LOW:      { badge: "bg-sky-500/15 text-sky-300 border-sky-500/30", bar: "border-sky-500" },
+  UNDEFINED:{ badge: "bg-slate-500/15 text-slate-300 border-slate-500/30", bar: "border-slate-600" },
+};
+
+const els = {
+  apiBase: document.getElementById("apiBase"),
+  code: document.getElementById("code"),
+  reviewBtn: document.getElementById("reviewBtn"),
+  reviewBtnLabel: document.getElementById("reviewBtnLabel"),
+  spinner: document.getElementById("spinner"),
+  clearBtn: document.getElementById("clearBtn"),
+  errorBanner: document.getElementById("errorBanner"),
+  emptyState: document.getElementById("emptyState"),
+  results: document.getElementById("results"),
+};
+
+function severityStyle(sev) {
+  return SEVERITY_STYLES[(sev || "UNDEFINED").toUpperCase()] || SEVERITY_STYLES.UNDEFINED;
+}
+
+function sortBySeverity(items, sevKey) {
+  return [...items].sort((a, b) => {
+    const ra = SEVERITY_ORDER.indexOf((a[sevKey] || "UNDEFINED").toUpperCase());
+    const rb = SEVERITY_ORDER.indexOf((b[sevKey] || "UNDEFINED").toUpperCase());
+    return (ra === -1 ? 99 : ra) - (rb === -1 ? 99 : rb);
+  });
+}
+
+function badge(text, sev) {
+  const s = severityStyle(sev);
+  return `<span class="inline-block text-xs font-medium px-2 py-0.5 rounded border ${s.badge}">${escapeHtml(text)}</span>`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
+function setLoading(isLoading) {
+  els.reviewBtn.disabled = isLoading;
+  els.spinner.classList.toggle("hidden", !isLoading);
+  els.reviewBtnLabel.textContent = isLoading ? "Analyzing…" : "Run review";
+}
+
+function showError(message) {
+  els.errorBanner.textContent = message;
+  els.errorBanner.classList.remove("hidden");
+}
+
+function hideError() {
+  els.errorBanner.classList.add("hidden");
+  els.errorBanner.textContent = "";
+}
+
+function renderRiskBanner(aiReview, aiError) {
+  if (aiReview) {
+    const s = severityStyle(aiReview.risk_level);
+    return `
+      <div class="rounded-lg border ${s.bar} border-l-4 bg-slate-900 p-4">
+        <div class="flex items-center gap-2 mb-1">
+          ${badge(aiReview.risk_level || "UNKNOWN", aiReview.risk_level)}
+          <span class="text-sm font-medium text-slate-200">Overall risk</span>
+        </div>
+        <p class="text-sm text-slate-300">${escapeHtml(aiReview.summary)}</p>
+      </div>`;
+  }
+  if (aiError) {
+    return `
+      <div class="rounded-lg border border-amber-800 border-l-4 bg-amber-950/40 p-4">
+        <p class="text-sm font-medium text-amber-200 mb-1">AI review unavailable</p>
+        <p class="text-sm text-amber-100/80">${escapeHtml(aiError)}</p>
+        <p class="text-xs text-amber-100/60 mt-2">The Bandit scan below still ran normally — it doesn't depend on the AI provider.</p>
+      </div>`;
+  }
+  return "";
+}
+
+function renderBanditSection(scan) {
+  const findings = sortBySeverity(scan.findings, "severity");
+  const count = scan.issue_count;
+
+  const items = findings.length
+    ? findings.map(f => `
+        <li class="border-l-4 ${severityStyle(f.severity).bar} bg-slate-900 rounded-r-lg px-4 py-3">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            ${badge(f.severity, f.severity)}
+            <span class="text-xs text-slate-500 font-mono">${escapeHtml(f.rule_id)} · line ${f.line}</span>
+          </div>
+          <p class="text-sm text-slate-200">${escapeHtml(f.message)}</p>
+          ${f.more_info ? `<a href="${escapeHtml(f.more_info)}" target="_blank" rel="noopener"
+             class="text-xs text-sky-400 hover:text-sky-300 mt-1 inline-block">Bandit docs for ${escapeHtml(f.rule_name)}</a>` : ""}
+        </li>`).join("")
+    : `<li class="text-sm text-slate-500 px-1 py-2">No issues found by Bandit.</li>`;
+
+  return `
+    <div>
+      <div class="flex items-baseline justify-between mb-2">
+        <h3 class="text-sm font-medium text-slate-300">Static analysis — Bandit</h3>
+        <span class="text-xs text-slate-500">${count} issue${count === 1 ? "" : "s"} · ${scan.loc} lines scanned</span>
+      </div>
+      <ul class="space-y-2">${items}</ul>
+    </div>`;
+}
+
+function renderAiSection(aiReview) {
+  if (!aiReview) return "";
+  const issues = sortBySeverity(aiReview.issues, "severity");
+
+  const items = issues.length
+    ? issues.map(i => `
+        <li class="border-l-4 ${severityStyle(i.severity).bar} bg-slate-900 rounded-r-lg px-4 py-3">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            ${badge(i.severity, i.severity)}
+            <span class="text-xs text-slate-400">${escapeHtml(i.category)}</span>
+            ${i.line != null ? `<span class="text-xs text-slate-500 font-mono">line ${i.line}</span>` : ""}
+          </div>
+          <p class="text-sm text-slate-200 mb-2">${escapeHtml(i.explanation)}</p>
+          <div class="bg-slate-950 border border-slate-800 rounded px-3 py-2">
+            <p class="text-xs text-slate-500 mb-1">Suggested fix</p>
+            <p class="text-sm text-slate-300 font-mono whitespace-pre-wrap">${escapeHtml(i.suggested_fix)}</p>
+          </div>
+        </li>`).join("")
+    : `<li class="text-sm text-slate-500 px-1 py-2">No issues flagged by the AI review.</li>`;
+
+  return `
+    <div>
+      <h3 class="text-sm font-medium text-slate-300 mb-2">AI review</h3>
+      <ul class="space-y-2">${items}</ul>
+    </div>`;
+}
+
+function renderResults(data) {
+  els.emptyState.classList.add("hidden");
+  els.results.classList.remove("hidden");
+  els.results.innerHTML = [
+    renderRiskBanner(data.ai_review, data.ai_error),
+    renderRedactionsNotice(data.redactions),
+    renderBanditSection(data.scan),
+    renderAiSection(data.ai_review),
+  ].filter(Boolean).join("");
+}
+
+function renderRedactionsNotice(redactions) {
+  if (!redactions || !redactions.length) return "";
+  const items = redactions.map(r => `<li>${escapeHtml(r)}</li>`).join("");
+  return `
+    <div class="rounded-lg border border-slate-700 bg-slate-900 px-4 py-3">
+      <p class="text-xs font-medium text-slate-300 mb-1">Redacted before sending to the AI provider</p>
+      <ul class="text-xs text-slate-400 list-disc list-inside space-y-0.5">${items}</ul>
+      <p class="text-xs text-slate-600 mt-2">The local Bandit scan above still used your original code — it never leaves this machine.</p>
+    </div>`;
+}
+
+async function runReview() {
+  const code = els.code.value;
+  if (!code.trim()) {
+    showError("Paste some Python code first — there's nothing to review yet.");
+    return;
+  }
+
+  hideError();
+  setLoading(true);
+
+  const base = els.apiBase.value.replace(/\/+$/, "");
+
+  try {
+    const res = await fetch(`${base}/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, language: "python" }),
+    });
+
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const body = await res.json();
+        detail = body.detail || JSON.stringify(body);
+      } catch (_) { /* response wasn't JSON — fall back to statusText */ }
+      showError(`Request failed (HTTP ${res.status}): ${detail}`);
+      return;
+    }
+
+    const data = await res.json();
+    renderResults(data);
+  } catch (err) {
+    showError(
+      `Couldn't reach the API at ${base}. Is the server running? ` +
+      `Start it with: uvicorn app.main:app --reload --port 8000`
+    );
+  } finally {
+    setLoading(false);
+  }
+}
+
+function clearAll() {
+  els.code.value = "";
+  hideError();
+  els.results.classList.add("hidden");
+  els.results.innerHTML = "";
+  els.emptyState.classList.remove("hidden");
+  els.code.focus();
+}
+
+els.reviewBtn.addEventListener("click", runReview);
+els.clearBtn.addEventListener("click", clearAll);
+els.code.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") runReview();
+});
+</script>
+</body>
+</html>
