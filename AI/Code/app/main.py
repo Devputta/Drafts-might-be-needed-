@@ -177,19 +177,20 @@ def root() -> dict:
 )
 def scan(request: ScanRequest) -> ScanResult:
     """
-    Run a local, static Bandit security scan over a Python snippet.
+    Run a local, static security scan over a code snippet.
 
-    The code is **never executed** — Bandit performs AST-based static
-    analysis only. This endpoint has no external network dependency, so
-    it's free to call as often as you like. No redaction applies here:
-    the code never leaves your machine.
+    Python uses Bandit (AST-based, never executes code). Other languages use
+    ESLint (JavaScript/TypeScript), gosec (Go), or basic pattern matching.
+    The code is **never executed**. This endpoint has no external network
+    dependency, so it's free to call as often as you like. No redaction
+    applies here: the code never leaves your machine.
     """
     _require_supported_language(request.language)
 
     try:
-        return run_bandit_scan(request.code)
+        return run_bandit_scan(request.code, request.language)
     except ScannerError as e:
-        logger.warning("Bandit scan failed: %s", e)
+        logger.warning("Scanner failed: %s", e)
         raise HTTPException(status_code=502, detail=str(e))
 
 
@@ -232,11 +233,11 @@ def review(
     _require_supported_language(request.language)
 
     try:
-        scan_result = run_bandit_scan(request.code)
+        scan_result = run_bandit_scan(request.code, request.language)
     except ScannerError as e:
         # Unlike the AI call, a broken local scanner IS a hard failure —
         # there's no meaningful response without it.
-        logger.warning("Bandit scan failed: %s", e)
+        logger.warning("Scanner failed: %s", e)
         raise HTTPException(status_code=502, detail=str(e))
 
     redacted_code, redaction_matches = redact_secrets(request.code)

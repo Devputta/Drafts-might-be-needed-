@@ -16,7 +16,9 @@ from pydantic import BaseModel, Field, field_validator
 # plus prompt overhead without truncation.
 MAX_CODE_CHARS = 50_000
 
-SUPPORTED_LANGUAGES = {"python"}
+# Languages supported for static analysis and AI review.
+# Python uses Bandit; JavaScript/TypeScript use ESLint; others may be added.
+SUPPORTED_LANGUAGES = {"python", "javascript", "typescript", "go", "ruby", "java", "php"}
 
 
 class ScanRequest(BaseModel):
