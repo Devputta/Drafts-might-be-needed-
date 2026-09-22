@@ -1,0 +1,150 @@
+%-------------------------
+% Resume in Latex
+% Author: MAHADEVU MP
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{multicol}
+\setlength{\multicolsep}{-3.0pt}
+\setlength{\columnsep}{-1pt}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1.19in}
+\addtolength{\topmargin}{-.8in}
+\addtolength{\textheight}{1.6in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-8pt}\scshape\raggedright\large\bfseries
+}{}{0em}{}[\color{black}\titlerule \vspace{-7pt}]
+
+\pdfgentounicode=1
+
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-4pt}}}}
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{\small #2} \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-6pt}
+}
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{1.001\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & \textbf{\small #2}\\
+    \end{tabular*}\vspace{-8pt}
+}
+\newcommand{\resumeCertification}[2]{
+    \item
+    \begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{\small #1} & \href{#2}{\small\underline{View credentials}} \\
+    \end{tabular*}\vspace{-6pt}
+}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-8pt}}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    {\Huge \scshape MAHADEVU M P} \\ \vspace{4pt}
+    
+    \small \ +91-9008152398 ~ 
+    \href{mailto:mahadevump657@gmail.com}{\ \underline{mahadevump657@gmail.com}} ~ 
+    \href{https://www.linkedin.com/in/mahadevu-m-p-58b51426b/}{\underline{linkedin.com/in/mahadevu-m-p}} ~
+    \href{https://github.com/Devputta}{\underline{github.com/Devputta}} 
+\end{center}
+
+%-----------SUMMARY-----------
+\section{Summary}
+Detail-oriented Software Engineering graduate with practical experience in
+manual testing concepts, STLC, defect life cycle management, and API testing
+using Postman through automation and data engineering projects.
+Demonstrated ability to create and execute test cases, perform bug reporting
+and defect tracking, and ensure product quality throughout the SDLC.
+
+%-----------SKILLS-----------
+\section{Skills}
+\textbf{Programming \& Querying:} SQL, Python, C  \\
+\textbf{Testing tools:} Automation Testing, Selenium, Web driver, Manual Testing, Jira\\
+\textbf{Data Visualization Tools:} MS Excel, Power BI\\
+\textbf{Tools:} Git, GitHub,UIPath, JN, MySQL, MS Office, 
+
+
+%-----------PROJECTS-----------
+\section{Projects}
+\resumeSubHeadingListStart
+  \resumeProjectHeading
+    {\textbf{Airbnb Data Engineering Pipeline } \href{https://github.com/Devputta/DE_PROJECT---AWS---SNOWFLAKE---DBT/tree/main}{\textbf{(Link)}} $|$ \emph{Snowflake, dbt, AWS, Python}}{}
+      \resumeItemListStart
+        \resumeItem{Built a scalable Medallion Architecture pipeline (Bronze → Silver → Gold) to process Airbnb listings, bookings, and hosts data from AWS S3 into Snowflake, ensuring structured and analytics-ready datasets.}
+        \resumeItem{Implemented dbt transformations including incremental models and SCD Type 2 snapshots, while designing fact tables and One-Big-Table (OBT) models with lineage tracking, testing, and dependency management.}
+        \resumeItem{Optimized data pipelines using Snowflake warehousing, clustering, and ephemeral models while enforcing data quality checks (unique, not-null, referential integrity, business rules) for efficient and trustworthy analytics.}
+      \resumeItemListEnd
+  \resumeProjectHeading
+      {\textbf{OpenCart Manual QA Testing} \href{https://github.com/Devputta/Manual-Testing-Project---1-By-DevPutta}{\textbf{(Link)}} $|$ \emph{Manual Testing, STLC, Jira/SmartBear}}{}
+      \resumeItemListStart
+        \resumeItem{Executed end-to-end manual testing of the OpenCart e-commerce application, covering the full STLC — from requirement analysis and test scenario design to test case execution, defect logging, retesting, and test sign-off.}
+        \resumeItem{Designed 8 test scenarios spanning 175+ detailed test cases across Registration, Login, Logout, Search, Product Display, and Add-to-Cart modules, tracking execution status and pass/fail results in SmartBear (Jira Test Management).}
+        \resumeItem{Identified and reported 23 defects with detailed reproduction steps, expected vs. actual results, and severity classification (Critical, Major, Minor), driving fixes through retesting and regression cycles.}
+      \resumeItemListEnd
+  \resumeProjectHeading
+      {\textbf{Docent: Context-Aware AI Document Assistant} 
+      \href{https://github.com/Devputta/Doset}{\textbf{(Link)}}$|$ \emph{Next.js, FastAPI, LangChain, ChromaDB, Docker}}{}
+      \resumeItemListStart
+        \resumeItem{Designed and developed a full-stack RAG document assistant in 7 days using AI-assisted development, letting users upload PDF/Markdown files and get answers grounded only in that document, with clickable inline citations that jump to the exact source page or heading.}
+        \resumeItem{Built the retrieval pipeline (text extraction $\rightarrow$ LangChain chunking $\rightarrow$ embeddings $\rightarrow$ ChromaDB) with page/heading metadata on every chunk, streaming answers over SSE, and a fallback that skips the LLM when nothing relevant is retrieved to prevent hallucination, with swappable OpenAI, Anthropic, and Gemini providers.}
+        \resumeItem{Implemented a secure FastAPI backend (10+ REST endpoints) with bcrypt/JWT and Google OAuth authentication, per-user data isolation, prompt-injection-resistant prompts, and sanitized uploads, then containerized the frontend, backend, and ChromaDB as 3 Docker Compose services and deployed the demo on Render.}
+      \resumeItemListEnd
+\resumeSubHeadingListEnd
+
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+  \resumeSubheading
+    {B.E. Information Science \& Engineering}{Graduated: 2025}
+    {P.E.S. College of Engineering, Mandya}{CGPA: 7.8 / 10}
+  \resumeSubheading
+    {Diploma. Computer Science \& Engineering}{Graduated: 2021}
+    {Government Polytechnic College, Ramanagara}{CGPA: 8 / 10}
+\resumeSubHeadingListEnd
+
+
+%-----------CERTIFICATIONS-----------
+\section{Certifications}
+\resumeSubHeadingListStart
+  \resumeCertification{NPTEL Certifications}{https://github.com/Devputta/M_P_Certificates-.git}
+  \resumeCertification{TCS Ion Certification}{https://github.com/Devputta/M_P_Certificates-.git}
+  \resumeCertification{Cyber Security Fundamentals}{https://github.com/Devputta/M_P_Certificates-.git}
+  \resumeCertification{Published ML Paper}{https://tarce.co/index.php/tarce/article/view/4261}
+\resumeSubHeadingListEnd
+
+
+
+\end{document}
